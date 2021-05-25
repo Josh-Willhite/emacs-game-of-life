@@ -1,5 +1,5 @@
 ;; create a new buffer with randomly initialized gol board
-(defconst size-of-board 3)
+(defconst size-of-board 48)
 (defconst board-array (make-vector size-of-board nil))
 
 (defun initialize-square () (if (= 1 (random 2))
@@ -77,8 +77,8 @@
             (setf (elt (elt new-board-array i) j) (char-from-name "BLACK LARGE SQUARE")))
            ((and (not live) (eq count 3))
             (setf (elt (elt new-board-array i) j) (char-from-name "BLACK LARGE SQUARE")))
-           (t
-            (setf (elt (elt new-board-array i) j) (char-from-name "WHITE LARGE SQUARE"))) ;; default caseA
+           (t ;; default case
+            (setf (elt (elt new-board-array i) j) (char-from-name "WHITE LARGE SQUARE")))
            )
           )
         (insert (elt (elt new-board-array i) j))
@@ -89,7 +89,16 @@
     )
   )
 
-(switch-to-buffer (get-buffer-create "gol"))
-(initialize-board)
-(next-generation)
-(next-generation)
+(defun init-gol ()
+  "Initialize GOL board"
+  (interactive)
+  (switch-to-buffer (get-buffer-create "gol"))
+  (initialize-board)
+  )
+
+(defun play-gol ()
+  "Play GOL"
+  ;; (interactive)
+  (erase-buffer)
+  (next-generation)
+  )
