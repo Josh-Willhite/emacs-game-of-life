@@ -1,23 +1,21 @@
 ;; create a new buffer with randomly initialized gol board
-
 (defconst size-of-board 3)
 (defconst board-array (make-vector size-of-board nil))
 
-(defun initialize-square ()
-  (if (= 1 (random 2))
-      (char-from-name "BLACK LARGE SQUARE")
-    (char-from-name "WHITE LARGE SQUARE")
-    )
-  )
+(defun initialize-square () (if (= 1 (random 2))
+                                (char-from-name "BLACK LARGE SQUARE")
+                              (char-from-name "WHITE LARGE SQUARE")
+                              )
+       )
 
 (defun initialize-board ()
   (dotimes (i size-of-board)
     (setf (aref board-array i) (make-vector size-of-board 0))
     (dotimes (j size-of-board)
       (setf (elt (elt board-array i) j) (initialize-square))
-      ;; (insert (elt (elt board-array i) j))
+      (insert (elt (elt board-array i) j))
       )
-    ;; (insert "\n")
+    (insert "\n")
     )
   )
 
@@ -66,16 +64,32 @@
 ;; All other live cells die in the next generation. Similarly, all other dead cells stay dead.
 
 (defun next-generation()
-  (dotimes (i size-of-board)
-    (dotimes (j size-of-board)
-      (print (neighbor-count j i))
-      ;; (insert (elt (elt board-array i) j))
+  (let ((new-board-array (make-vector size-of-board nil)))
+    (dotimes (i size-of-board)
+      (setf (aref new-board-array i) (make-vector size-of-board 0))
+      (dotimes (j size-of-board)
+        (let (
+              (count (neighbor-count j i))
+              (live (if (eq (elt (elt board-array i) j) (char-from-name "BLACK LARGE SQUARE")) t nil))
+              )
+          (cond
+           ((and live (or (eq count 2) (eq count 3)))
+            (setf (elt (elt new-board-array i) j) (char-from-name "BLACK LARGE SQUARE")))
+           ((and (not live) (eq count 3))
+            (setf (elt (elt new-board-array i) j) (char-from-name "BLACK LARGE SQUARE")))
+           (t
+            (setf (elt (elt new-board-array i) j) (char-from-name "WHITE LARGE SQUARE"))) ;; default caseA
+           )
+          )
+        (insert (elt (elt new-board-array i) j))
+        )
+      (insert "\n")
       )
-    ;; (insert "\n")
+    (setq board-array new-board-array)
     )
   )
 
+(switch-to-buffer (get-buffer-create "gol"))
 (initialize-board)
 (next-generation)
-;; (switch-to-buffer (get-buffer-create "gol"))
-;; (initialize-board)
+(next-generation)
