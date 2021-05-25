@@ -15,9 +15,9 @@
     (setf (aref board-array i) (make-vector size-of-board 0))
     (dotimes (j size-of-board)
       (setf (elt (elt board-array i) j) (initialize-square))
-      (insert (elt (elt board-array i) j))
+      ;; (insert (elt (elt board-array i) j))
       )
-    (insert "\n")
+    ;; (insert "\n")
     )
   )
 
@@ -37,7 +37,7 @@
         )
     (dolist (i ops)
       (let ((c (eval (elt i 0))) (r (eval (elt i 1))))
-        (if (not (or (< c 0) (< r 0) (> c size-of-board) (> r size-of-board)))
+        (if (not (or (< c 0) (< r 0) (> c (- size-of-board 1)) (> r (- size-of-board 1))))
             (if (eq (length neighbors) 0)
                 (setq neighbors (list `(,c ,r)))
               (push `(,c ,r) (cdr (last neighbors)))
@@ -51,13 +51,16 @@
   )
 
 (defun neighbor-count (column row)
-  (let ((neighbors (get-neighbors column row)))
+  (let ((neighbors (get-neighbors column row)) (count 0))
     (dolist (n neighbors)
-      (print (elt (elt board-array (car (cdr n))) (car n)))
+      (if (eq (elt (elt board-array (car (cdr n))) (car n)) (char-from-name "BLACK LARGE SQUARE"))
+          (setq count (+ count 1))
+        )
       )
-    ;; )
+    count
     )
   )
+
 ;; Any live cell with two or three live neighbours survives.
 ;; Any dead cell with three live neighbours becomes a live cell.
 ;; All other live cells die in the next generation. Similarly, all other dead cells stay dead.
@@ -72,9 +75,7 @@
     )
   )
 
+(initialize-board)
 (next-generation)
 ;; (switch-to-buffer (get-buffer-create "gol"))
 ;; (initialize-board)
-
-
-;; (print board-array)
