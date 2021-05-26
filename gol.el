@@ -1,23 +1,51 @@
-;; create a new buffer with randomly initialized gol board
-(defconst size-of-board 64)
-(defconst board-array (make-vector size-of-board nil))
-(defconst alive (char-from-name "BLACK LARGE SQUARE"))
-(defconst dead (char-from-name "WHITE LARGE SQUARE"))
+;;; gol.el --- Description -*- lexical-binding: t; -*-
+;;
+;; Copyright (C) 2021 Josh Willhite
+;;
+;; Author: Josh Willhite <https://github.com/josh-willhite>
+;; Maintainer: Josh Willhite <me@joshwillhite.com>
+;; Created: May 25, 2021
+;; Modified: May 25, 2021
+;; Version: 0.0.1
+;; Keywords: Symbol’s value as variable is void: finder-known-keywords
+;; Homepage: https://github.com/josh-willhite/emacs-game-of-life
+;; Package-Requires: ((emacs "24.3"))
+;;
+;; This file is not part of GNU Emacs.
+;;
+;;; Commentary:
+;;
+;;  Implementation of Conway's game of life for fun and learning.
+;;
+;;  ref: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+;;
+;;; Code:
 
-(defun gol-initialize-square () (if (= 1 (random 2)) alive dead))
+(defconst gol-size-of-board 64)
+(defconst gol-board-array (make-vector gol-size-of-board nil))
+(defconst gol-alive (char-from-name "BLACK LARGE SQUARE"))
+(defconst gol-dead (char-from-name "WHITE LARGE SQUARE"))
+(defconst gol-timer nil)
+
+(defun gol-initialize-square ()
+  "Randomly initialize a square to gol-alive or gol-dead."
+  (if (= 1 (random 2)) gol-alive gol-dead)
+  )
 
 (defun gol-initialize-board ()
-  (dotimes (i size-of-board)
-    (setf (aref board-array i) (make-vector size-of-board 0))
-    (dotimes (j size-of-board)
-      (setf (elt (elt board-array i) j) (gol-initialize-square))
-      (insert (elt (elt board-array i) j))
+  "Initialize all squares on board."
+  (dotimes (i gol-size-of-board)
+    (setf (aref gol-board-array i) (make-vector gol-size-of-board 0))
+    (dotimes (j gol-size-of-board)
+      (setf (elt (elt gol-board-array i) j) (gol-initialize-square))
+      (insert (elt (elt gol-board-array i) j))
       )
     (insert "\n")
     )
   )
 
 (defun gol-get-neighbors (column row)
+  "Get coordinates of squares adjacent to COLUMN, ROW."
   (let ((ops `(
                [column (- row 1)]
                [(- column 1) (- row 1)]
@@ -33,7 +61,7 @@
         )
     (dolist (i ops)
       (let ((c (eval (elt i 0))) (r (eval (elt i 1))))
-        (if (not (or (< c 0) (< r 0) (> c (- size-of-board 1)) (> r (- size-of-board 1))))
+        (if (not (or (< c 0) (< r 0) (> c (- gol-size-of-board 1)) (> r (- gol-size-of-board 1))))
             (if (eq (length neighbors) 0)
                 (setq neighbors (list `(,c ,r)))
               (push `(,c ,r) (cdr (last neighbors)))
@@ -46,9 +74,10 @@
   )
 
 (defun gol-neighbor-count (column row)
+  "Count the number of live cells adjacent to COLUMN, ROW."
   (let ((neighbors (gol-get-neighbors column row)) (count 0))
     (dolist (n neighbors)
-      (if (eq (elt (elt board-array (car (cdr n))) (car n)) alive)
+      (if (eq (elt (elt gol-board-array (car (cdr n))) (car n)) gol-alive)
           (setq count (+ count 1))
         )
       )
@@ -57,32 +86,33 @@
   )
 
 (defun gol-next-generation()
+  "Determine next state of the board base don previous state."
   (erase-buffer)
-  (let ((new-board-array (make-vector size-of-board nil)))
-    (dotimes (i size-of-board)
-      (setf (aref new-board-array i) (make-vector size-of-board 0))
-      (dotimes (j size-of-board)
+  (let ((new-board-array (make-vector gol-size-of-board nil)))
+    (dotimes (i gol-size-of-board)
+      (setf (aref new-board-array i) (make-vector gol-size-of-board 0))
+      (dotimes (j gol-size-of-board)
         (let (
               (count (gol-neighbor-count j i))
-              (live (if (eq (elt (elt board-array i) j) alive) t nil))
+              (live (if (eq (elt (elt gol-board-array i) j) gol-alive) t nil))
               )
-          ;; Any live cell with two or three live neighbours survives.
-          ;; Any dead cell with three live neighbours becomes a live cell.
-          ;; All other live cells die in the next generation. Similarly, all other dead cells stay dead.
           (cond
+           ;; Any live cell with two or three live neighbours survives.
            ((and live (or (eq count 2) (eq count 3)))
-            (setf (elt (elt new-board-array i) j) alive))
+            (setf (elt (elt new-board-array i) j) gol-alive))
+           ;; Any gol-dead cell with three live neighbours becomes a live cell.
            ((and (not live) (eq count 3))
-            (setf (elt (elt new-board-array i) j) alive))
-           (t ;; default case
-            (setf (elt (elt new-board-array i) j) dead))
+            (setf (elt (elt new-board-array i) j) gol-alive))
+           ;; All other live cells die in the next generation. Similarly, all other gol-dead cells stay gol-dead.
+           (t
+            (setf (elt (elt new-board-array i) j) gol-dead))
            )
           )
         (insert (elt (elt new-board-array i) j))
         )
       (insert "\n")
       )
-    (setq board-array new-board-array)
+    (setq gol-board-array new-board-array)
     )
   )
 
